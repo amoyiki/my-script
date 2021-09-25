@@ -1,0 +1,15 @@
+beautifulsoup4==4.10.0
+cached-property==1.5.2
+certifi==2021.5.30
+charset-normalizer==2.0.6
+fake-useragent==0.1.11
+frozendict==2.0.6
+genanki==0.11.0
+idna==3.2
+lxml==4.6.3
+pystache==0.5.4
+PyYAML==5.4.1
+requests==2.26.0
+soupsieve==2.2.1
+urllib3==1.26.7
+xlrd==2.0.1

@@ -32,7 +32,9 @@ def get_mp3(word, lang):
     dl_url = 'https://audio00.forvo.com/mp3/{}'.format(p)
     firefox = fake_useragent.UserAgent().ff
     c = requests.get(dl_url, headers={'User-Agent': firefox}, stream=True)
-    dl_path = os.path.join(basedir, '{}.mp3'.format(word))
+    if not os.path.isdir(os.path.join(basedir, 'voice')):
+        os.mkdir(os.path.join(basedir, 'voice'))
+    dl_path = os.path.join(basedir, 'voice/{}.mp3'.format(word))
     with open(dl_path, 'wb') as f:
         for chunk in c.iter_content():
             f.write(chunk)
