@@ -8,19 +8,21 @@ my_model = genanki.Model(
     1632558973,
     'N1核心词汇800',
     fields=[
+        {'name': 'id'},
         {'name': 'Level'},
         {'name': 'FrontSound'},
         {'name': 'Front'},
+        {'name': 'Hirakana'},
         {'name': 'WordType'},
         {'name': 'Meaning'},
         {'name': 'Sentence'},
-        {'name': 'SentenceSound'},
         {'name': 'Notes'},
     ],
     templates=[
         {
             'name': '日语能力考模板',
             'qfmt': '''<div class="body-upper" style="border-radius: 5px;">
+                    <span style="display: none">{{id}}</span>
                     <div class="level">{{Level}}</div>
                     <div id="audio">{{FrontSound}}</div>
                     <div class="soundFront" onclick="playAudio()"></div>
@@ -34,41 +36,26 @@ my_model = genanki.Model(
                         }
                     </script>''',
             'afmt': '''<div class="body-upper" style="border-radius: 5px 5px 0px 0px;">
+                    <span style="display: none">{{id}}</span>
                     <div class="level">{{Level}}</div>
                     <div id="audio">{{FrontSound}}</div>
+                    <div>{{Hirakana}}</div>
                     <div class="soundFront" onclick="playAudio()"></div>
                     {{Front}}
                     </div>
-                    
                     <div class="body-lower" style="border-radius: 0px 0px 5px 5px;">
-                    
                     <div class="type">{{WordType}}</div><div class="meaning"> {{Meaning}}</div>
-                    
-                    <div id="senaudio">{{SentenceSound}}</div>
-                    
                     <div class="sentence">
                     {{Sentence}} <i class="fas fa-comment-dots" onclick="playSenAudio()"></i>
                     </div>
-                    
-                    
                     {{#Notes}}<div class="notes">
                     {{Notes}}
                     </div>{{/Notes}}
-                    
-                    </div>
-                    
-                    
-                    
-                    <script src="(replace with your own fontawesome link)" crossorigin="anonymous"></script>
-                    
+                    </div>               
+                    <script src="(replace with your own fontawesome link)" crossorigin="anonymous"></script>          
                     <script>
                         function playAudio(){
                             var audioDiv = document.getElementById('audio');
-                            var audio = audioDiv.getElementsByTagName("*");
-                            audio[0].click();
-                        }
-                       function playSenAudio(){
-                            var audioDiv = document.getElementById('senaudio');
                             var audio = audioDiv.getElementsByTagName("*");
                             audio[0].click();
                         }
@@ -157,26 +144,34 @@ my_model = genanki.Model(
                  margin-top: 20px;
                 }''', )
 
-
 my_deck = genanki.Deck(
     1632559573,
     'N1核心词汇800')
-import csv
-with open(r'file_path', 'r', encoding='UTF-8') as f:
-    reader = csv.reader(f)
-    for row in reader:
-        if row:
-            w = row[1]
-            desc = row[3]
-            note = row[4]
-            print(w)
-            try:
-                my_note = genanki.Note(
-                    model=my_model,
-                    fields=['N1', '[sound:{}.mp3]'.format(w), w, '词性', desc, '句子', '[sound:{}.mp3]'.format(w), note])
-                my_deck.add_note(my_note)
-            except Exception as e:
-                print(e)
 
+import bs4
+
+with open(r'C:\Users\Administrator\Desktop\1.html', 'r', encoding='UTF-8') as f:
+    r = f.read()
+    soup = bs4.BeautifulSoup(r, 'lxml')
+    tr_html = soup.find_all('tr')
+    for tr in tr_html:
+        if tr:
+            data = tr.find_all('td')
+            if data:
+                i = data[0].text
+                w = data[1].text
+                h = tr.select_one('.xsjrh-word1') and tr.select_one('.xsjrh-word1').text or ''
+                cx = tr.select_one('.xsjrh-cat') and tr.select_one('.xsjrh-cat').text or ''
+                desc = tr.select_one('.xsjrh-c') and tr.select_one('.xsjrh-c').text or ''
+                sentence = ''.join([x.content for x in tr.find_all('.xsjrh-j')])
+
+                note = ''
+                try:
+                    my_note = genanki.Note(
+                        model=my_model,
+                        fields=['{}'.format(i), 'N1', '[sound:{}.mp3]'.format(w), w, h, cx, desc, sentence, note])
+                    my_deck.add_note(my_note)
+                except Exception as e:
+                    print(e)
 
 genanki.Package(my_deck).write_to_file('output.apkg')
