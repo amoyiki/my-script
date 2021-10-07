@@ -2,6 +2,8 @@
 """
 批量生成 anki 卡片
 """
+import os
+
 import genanki
 
 my_model = genanki.Model(
@@ -145,7 +147,7 @@ my_deck = genanki.Deck(
 
 import bs4
 
-with open(r'dict_export_path', 'r', encoding='UTF-8') as f:
+with open(r'C:\Users\Administrator\Desktop\1.html', 'r', encoding='UTF-8') as f:
     r = f.read()
     soup = bs4.BeautifulSoup(r, 'lxml')
     tr_html = soup.find_all('tr')
@@ -199,5 +201,11 @@ with open(r'dict_export_path', 'r', encoding='UTF-8') as f:
                     my_deck.add_note(my_note)
                 except Exception as e:
                     print(e)
-
-genanki.Package(my_deck).write_to_file('output.apkg')
+my_package = genanki.Package(my_deck)
+# 添加媒体文件
+f_list = []
+for parent, dirnames, filenames in os.walk(r"C:\Users\Administrator\AppData\Roaming\Anki2\账户1\collection.media"):
+    for f in filenames:
+        f_list.append(os.path.join(parent, f))
+my_package.media_files = f_list
+my_package.write_to_file('output.apkg')
