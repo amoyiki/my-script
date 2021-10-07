@@ -13,9 +13,9 @@ my_model = genanki.Model(
         {'name': 'FrontSound'},
         {'name': 'Front'},
         {'name': 'Hirakana'},
+        {'name': 'Kanji'},
         {'name': 'WordType'},
         {'name': 'Meaning'},
-        {'name': 'Sentence'},
         {'name': 'Notes'},
     ],
     templates=[
@@ -41,13 +41,10 @@ my_model = genanki.Model(
                     <div id="audio">{{FrontSound}}</div>
                     <div>{{Hirakana}}</div>
                     <div class="soundFront" onclick="playAudio()"></div>
-                    {{Front}}
+                    {{Kanji}}
                     </div>
                     <div class="body-lower" style="border-radius: 0px 0px 5px 5px;">
                     <div class="type">{{WordType}}</div><div class="meaning"> {{Meaning}}</div>
-                    <div class="sentence">
-                    {{Sentence}} <i class="fas fa-comment-dots" onclick="playSenAudio()"></i>
-                    </div>
                     {{#Notes}}<div class="notes">
                     {{Notes}}
                     </div>{{/Notes}}
@@ -133,8 +130,6 @@ my_model = genanki.Model(
                  width: 6%;
                 }
                 
-                .sentence {
-                }
                 
                 .notes {
                  font-family: Noto Sans JP Regular;
@@ -150,7 +145,7 @@ my_deck = genanki.Deck(
 
 import bs4
 
-with open(r'C:\Users\Administrator\Desktop\1.html', 'r', encoding='UTF-8') as f:
+with open(r'dict_export_path', 'r', encoding='UTF-8') as f:
     r = f.read()
     soup = bs4.BeautifulSoup(r, 'lxml')
     tr_html = soup.find_all('tr')
@@ -160,16 +155,47 @@ with open(r'C:\Users\Administrator\Desktop\1.html', 'r', encoding='UTF-8') as f:
             if data:
                 i = data[0].text
                 w = data[1].text
-                h = tr.select_one('.xsjrh-word1') and tr.select_one('.xsjrh-word1').text or ''
+                h = tr.select_one('yomi') and tr.select_one('yomi').text or ''
+                if not h:
+                    h = tr.select_one('.xsjrh-word1') and tr.select_one('.xsjrh-word1').text or ''
                 cx = tr.select_one('.xsjrh-cat') and tr.select_one('.xsjrh-cat').text or ''
-                desc = tr.select_one('.xsjrh-c') and tr.select_one('.xsjrh-c').text or ''
-                sentence = ''.join([x.content for x in tr.find_all('.xsjrh-j')])
+                hanzi = tr.select_one('kanji') and tr.select_one('kanji').text or ''
+                if not hanzi:
+                    hanzi = tr.select_one('.xsjrh-word2') and tr.select_one('.xsjrh-word2').text or ''
 
+                desc = tr.find_all('div', class_='xsjrh-sense')
+                if desc:
+                    desc_list = []
+                    for d in desc:
+                        _desc = ''
+                        sid = d.find('span', class_='xsjrh-sid')
+                        if sid:
+                            _desc = '{}'.format(sid.text)
+
+                        for x in d.find_all('span', class_='xsjrh-sense-li'):
+                            ja = x.find('span', class_='xsjrh-j')
+                            cn = x.find('span', class_='xsjrh-c')
+                            if ja:
+                                _desc = '{} {}<br/>'.format(
+                                    _desc, ja.text)
+                            if cn:
+                                _desc = '{} {}'.format(
+                                    _desc, cn.text)
+                            desc_list.append(_desc)
+                    desc = '<br>'.join(desc_list)
+                    desc = '{}<br>'.format(desc)
+
+                if not desc:
+                    desc = tr.select_one('.description') and tr.select_one('.description').text or ''
+                if not desc:
+                    desc = tr.select_one('.explain_wrap_styleless') and tr.select_one(
+                        '.explain_wrap_styleless').text or ''
                 note = ''
+
                 try:
                     my_note = genanki.Note(
                         model=my_model,
-                        fields=['{}'.format(i), 'N1', '[sound:{}.mp3]'.format(w), w, h, cx, desc, sentence, note])
+                        fields=['{}'.format(i), 'N1', '[sound:{}.mp3]'.format(w), w, h, hanzi, cx, desc, note])
                     my_deck.add_note(my_note)
                 except Exception as e:
                     print(e)
